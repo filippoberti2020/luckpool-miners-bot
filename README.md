@@ -1,0 +1,1 @@
+# luckpool-miners-bot
