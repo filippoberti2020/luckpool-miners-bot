@@ -98,10 +98,31 @@ async def info_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
                 message = "Mining Worker Stats:\n\n"
 
+                num_workers = 0
+                total_hashrate = 0
+
                 for stat in stats:
                     key = stat.find("div", {"class": "col-lg-3"}).text.strip()
-                    value = stat.find("div", {"class": "col-lg-9"}).text.strip()
-                    message += f"{key}: {value}\n"
+                    if key == "Balance":
+                        value = stat.find("span", {"id": "statsBalance"}).text.strip()
+                    elif key == "Workers":
+                        num_workers = int(stat.find("div", {"class": "col-lg-9"}).text.strip())
+                    elif key == "Total Hashrate":
+                        total_hashrate = float(stat.find("span", {"id": "statsMinerSols"}).text.strip().replace("S", ""))
+                    else:
+                        value = stat.find("div", {"class": "col-lg-9"}).text.strip()
+                        message += f"{key}: {value}\n"
+
+                message += f"\nNumber of Workers: {num_workers}\nTotal Hashrate: {total_hashrate} VRSC/s\n"
+
+                # Extract worker data
+                worker_data = soup.find("tbody").find_all("tr")
+
+                for worker in worker_data:
+                    miner_name = worker.find_all("td")[0].text.strip()
+                    hashrate = worker.find_all("td")[1].text.strip()
+                    shares = worker.find_all("td")[2].text.strip()
+                    message += f"Worker: {miner_name} Hashrate: {hashrate} Shares: {shares}\n"
 
                 await update.message.reply_text(message)
 
@@ -113,7 +134,6 @@ async def info_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
     else:
         await update.message.reply_text("You have not saved any mining worker links yet.")
-
 
 def main() -> None:
     """Start the bot."""
